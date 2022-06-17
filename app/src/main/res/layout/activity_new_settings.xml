@@ -56,18 +56,6 @@
             android:textSize="20sp" />
 
         <Button
-            android:id="@+id/btn_settings_noti"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="16dp"
-            android:background="@drawable/btn_option"
-            android:drawableStart="@drawable/ic_baseline_notifications_36"
-            android:fontFamily="@font/iciel_cadena"
-            android:text="@string/notifications"
-            android:textColor="@color/colorPrimaryDark"
-            android:textSize="20sp" />
-
-        <Button
             android:id="@+id/btn_chatSupport"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"

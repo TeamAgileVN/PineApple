@@ -109,6 +109,8 @@
     <string name="show_birthday">Show birthday</string>
     <string name="show_distance">Show Distance</string>
     <string name="back">Back</string>
+    <string name="common">Common Passion</string>
+    <string name="kol">Key Opinion Leaders</string>
     <string name="block_user">Block user</string>
     <string name="block">Block</string>
     <string name="unmatch_user">Unmatch user</string>
@@ -158,5 +160,8 @@
     <string name="common_passion">Common Passion</string>
 
     <string name="crips_client_id">942b95e5-7079-4736-9381-ae51bea55428</string>
+    <string name="facebook_app_id">417771843039840</string>
+    <string name="fb_login_protocol_scheme">fb417771843039840</string>
+    <string name="facebook_client_token">a59ac9a91d3ea653f1d1644956acfb60</string>
 
 </resources>

@@ -47,9 +47,9 @@ class NewSettingsActivity : AppCompatActivity() {
         val btnEditProfile : Button = findViewById(R.id.btn_settings_profile)
         val btnFilter : Button = findViewById(R.id.btn_settings_filter)
         val btnInfo : Button = findViewById(R.id.btn_settings_info)
-        val btnNotification : Button = findViewById(R.id.btn_settings_noti)
+       // val btnNotification : Button = findViewById(R.id.btn_settings_noti)
         val btnBlock : Button = findViewById(R.id.btn_blocked_users)
-        val btnNoti : Button = findViewById(R.id.btn_settings_noti)
+       // val btnNoti : Button = findViewById(R.id.btn_settings_noti)
         val btnChat : Button = findViewById(R.id.btn_chatSupport)
 
         btnEditProfile.setOnClickListener {

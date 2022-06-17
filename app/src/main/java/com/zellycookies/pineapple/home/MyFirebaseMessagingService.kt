@@ -18,7 +18,7 @@ import com.zellycookies.pineapple.R
 import java.util.*
 
 class MyFirebaseMessagingService : FirebaseMessagingService() {
-    private val ADMIN_CHANNEL_ID = "match_channel"
+    private val ADMIN_CHANNEL_ID = "channel_match"
 
     override fun onNewToken(token: String) {
         Log.d("FirebaseMessaging", "Refreshed token: $token")
@@ -42,7 +42,7 @@ class MyFirebaseMessagingService : FirebaseMessagingService() {
         intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP)
         val pendingIntent = PendingIntent.getActivity(
             this, 0, intent,
-            PendingIntent.FLAG_ONE_SHOT
+            PendingIntent.FLAG_MUTABLE
         )
 
         val largeIcon = BitmapFactory.decodeResource(

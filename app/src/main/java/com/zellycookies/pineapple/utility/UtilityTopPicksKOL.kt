@@ -1,66 +1,53 @@
-package com.zellycookies.pineapple.home
+package com.zellycookies.pineapple.utility
 
 import android.Manifest
-import android.app.Activity
 import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.os.Build
+import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.util.Log
 import android.view.View
+import android.widget.ImageButton
 import android.widget.ListView
+import android.widget.TextView
 import android.widget.Toast
 import androidx.core.app.ActivityCompat
 import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationManagerCompat
 import androidx.core.content.ContextCompat
-import com.android.volley.RequestQueue
-import com.android.volley.Response
-import com.android.volley.toolbox.JsonObjectRequest
-import com.android.volley.toolbox.Volley
-import com.google.android.material.bottomnavigation.BottomNavigationView
 import com.google.android.material.floatingactionbutton.FloatingActionButton
-import com.google.android.material.tabs.TabLayout
 import com.google.firebase.auth.FirebaseAuth
-import com.google.firebase.auth.FirebaseAuth.AuthStateListener
 import com.google.firebase.auth.FirebaseUser
 import com.google.firebase.database.*
 import com.google.firebase.firestore.FieldValue
 import com.google.firebase.firestore.FirebaseFirestore
-import com.google.firebase.messaging.FirebaseMessaging
 import com.lorentzos.flingswipe.SwipeFlingAdapterView
 import com.zellycookies.pineapple.R
 import com.zellycookies.pineapple.introduction.IntroductionMain
 import com.zellycookies.pineapple.main.*
-import com.zellycookies.pineapple.utility.UtilityHistoryActivity
+import com.zellycookies.pineapple.utility.adapter.RankList
+import com.zellycookies.pineapple.utility.adapter.RankObject
 import com.zellycookies.pineapple.utils.CalculateAge
 import com.zellycookies.pineapple.utils.GPS
-import com.zellycookies.pineapple.utils.TopNavigationViewHelper
 import com.zellycookies.pineapple.utils.User
-import org.json.JSONException
-import org.json.JSONObject
 
-
-class HomeSwipeActivity : Activity() {
-    private val MY_PERMISSIONS_REQUEST_LOCATION = 123
-    private val mContext: Context = this@HomeSwipeActivity
+class UtilityTopPicksKOL : AppCompatActivity() {
+    private val myPermissionRequestLocation = 123
+    private val mContext: Context = this@UtilityTopPicksKOL
     private var userSex: String? = null
-    private var lookforSex: String? = null
+    private var lookForSex: String? = null
     private var latitude = 37.349642
-    private var longtitude = -121.938987
+    private var longitude = -121.938987
     private var currentUID: String? = null
     private var movies = false
     private var music = false
     private var art = false
     private var food = false
-    private val name: String? = null
-    private val bio: String? = null
-    private val interest: String? = null
     private var mNotificationHelper: NotificationHelper? = null
-    private val cards_data: Array<Cards> = arrayOf()
     private var arrayAdapter: PhotoAdapter? = null
     var listView: ListView? = null
     var rowItems: MutableList<Cards>? = null
@@ -68,8 +55,6 @@ class HomeSwipeActivity : Activity() {
     var gps: GPS? = null
     private var thisUserId : String? = null
     private var flingContainer : SwipeFlingAdapterView? = null
-    private var tabLayout : TabLayout? = null
-    private var user : FirebaseUser? = null
 
     //firebase
     private var mAuth: FirebaseAuth? = null
@@ -81,40 +66,28 @@ class HomeSwipeActivity : Activity() {
     private var maxAge: Int = 100
     private var minAge: Int = 16
     private var distancePreference: Int = 50
-    private var genderPreference: String? = "male"
-
-    //notification
-    private val FCM_API = "https://fcm.googleapis.com/fcm/send"
-    private val serverKey = "key=" + "AAAACwSYRCE:APA91bGhBxbE6dg_W-zq-6JyA3H_m-8r2ohCHJ_G15nL6VUJVEN0QECk9t38EhuXfxKKvjqR8q0EoceH1eRqQxAwL4MmfoXnrJ2qt-uYPBKno4Mj4EsMdROCmc7TpFPyUvCIL-z-8WiR"
-    private val contentType = "application/json"
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContentView(R.layout.activity_home_swipe)
+        setContentView(R.layout.activity_utility_top_picks_kol)
         createNotificationChannel()
         usersDb = FirebaseDatabase.getInstance().reference
         mFirebaseFirestore = FirebaseFirestore.getInstance()
         mNotificationHelper = NotificationHelper(this)
         setupFirebaseAuth()
-        setupTabLayout()
-        setupTopNavigationView()
         checkUserSex()
         rowItems = ArrayList()
         cardCache = ArrayList()
         checkCardCache()
         arrayAdapter = PhotoAdapter(this, R.layout.item, rowItems as ArrayList<Cards>)
         updateSwipeCard()
-        initButton()
+        initUI()
     }
 
     private fun findFilter(dataSnapshot: DataSnapshot) {
         distancePreference = dataSnapshot.getValue(User::class.java)!!.preferDistance!!
         minAge = dataSnapshot.getValue(User::class.java)!!.preferMinAge!!
         maxAge = dataSnapshot.getValue(User::class.java)!!.preferMaxAge!!
-
-        /*usersDb!!.child(userSex!!).child(currentUID!!).child("preferDistance").setValue(distancePreference)
-        usersDb!!.child(userSex!!).child(currentUID!!).child("preferMinAge").setValue(minAge)
-        usersDb!!.child(userSex!!).child(currentUID!!).child("preferMaxAge").setValue(maxAge)*/
     }
 
     private fun checkCardCache() {
@@ -139,14 +112,14 @@ class HomeSwipeActivity : Activity() {
         val listShowDistance = intent.getStringArrayListExtra("listShowDistance")
         for (i in 0 until listUserId!!.size) {
             val item = Cards(listUserId[i], listName!![i], listDoB!![i],
-                        listAge!![i], listUrl!![i], listBio!![i],
-                        listInterest!![i], listDistance!![i],
-                        listShowDoB!![i].toBoolean(), listShowDistance!![i].toBoolean())
+                listAge!![i], listUrl!![i], listBio!![i],
+                listInterest!![i], listDistance!![i],
+                listShowDoB!![i].toBoolean(), listShowDistance!![i].toBoolean())
             cardCache!!.add(cardCache!!.size, item)
         }
     }
 
-    private fun initButton() {
+    private fun initUI() {
         val btnSwipeLeft = findViewById<FloatingActionButton>(R.id.dislikebtn)
         val btnSwipeRight = findViewById<FloatingActionButton>(R.id.likebtn)
         val btnRewind = findViewById<FloatingActionButton>(R.id.rewindbtn)
@@ -154,6 +127,11 @@ class HomeSwipeActivity : Activity() {
         btnSwipeLeft.setOnClickListener { dislikeBtn() }
         btnSwipeRight.setOnClickListener { likeBtn() }
         btnRewind.setOnClickListener { rewindBtn() }
+
+        val btnReturn = findViewById<View>(R.id.back) as ImageButton
+        btnReturn.setOnClickListener { onReturn() }
+        val toolbar = findViewById<TextView>(R.id.toolbartag)
+        toolbar.text = getString(R.string.kol)
     }
 
     private fun updateLocation() {
@@ -165,7 +143,7 @@ class HomeSwipeActivity : Activity() {
         ) {
             ActivityCompat.requestPermissions(
                 this, arrayOf(Manifest.permission.ACCESS_FINE_LOCATION),
-                MY_PERMISSIONS_REQUEST_LOCATION
+                myPermissionRequestLocation
             )
         } else {
             gps = GPS(this)
@@ -173,15 +151,11 @@ class HomeSwipeActivity : Activity() {
             // made the changes to set location only if location object is not null, else default location is taken
             if (location != null) {
                 latitude = location.latitude
-                longtitude = location.longitude
+                longitude = location.longitude
             }
-            val curDB = FirebaseDatabase.getInstance().reference.child(userSex!!).child(
-                currentUID!!
-            )
             val userLoc: MutableMap<Any, Any> = mutableMapOf()
-
             userLoc["latitude"] = latitude
-            userLoc["longtitude"] = longtitude
+            userLoc["longitude"] = longitude
         }
     }
 
@@ -191,9 +165,9 @@ class HomeSwipeActivity : Activity() {
         grantResults: IntArray
     ) {
         when (requestCode) {
-            MY_PERMISSIONS_REQUEST_LOCATION -> {
+            myPermissionRequestLocation -> {
                 run {
-                    if (grantResults.size > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                    if (grantResults.isNotEmpty() && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
                         if (ContextCompat.checkSelfPermission(
                                 this,
                                 Manifest.permission.ACCESS_FINE_LOCATION
@@ -203,7 +177,7 @@ class HomeSwipeActivity : Activity() {
                             updateLocation()
                         } else {
                             Toast.makeText(
-                                this@HomeSwipeActivity,
+                                mContext,
                                 "Location Permission Denied. You have to give permission inorder to know the user range ",
                                 Toast.LENGTH_SHORT
                             )
@@ -233,7 +207,7 @@ class HomeSwipeActivity : Activity() {
             override fun onLeftCardExit(dataObject: Any) {
                 val obj = dataObject as Cards
                 val userId = obj.userId
-                usersDb!!.child(lookforSex!!).child(userId).child("connections").child("dislikeme")
+                usersDb!!.child(lookForSex!!).child(userId).child("connections").child("dislikeme")
                     .child(
                         currentUID!!
                     ).setValue(true)
@@ -245,11 +219,11 @@ class HomeSwipeActivity : Activity() {
             override fun onRightCardExit(dataObject: Any) {
                 val obj = dataObject as Cards
                 val userId = obj.userId
-                usersDb!!.child(lookforSex!!).child(userId).child("connections").child("dislikeme")
+                usersDb!!.child(lookForSex!!).child(userId).child("connections").child("dislikeme")
                     .child(
                         currentUID!!
                     ).setValue(null)
-                usersDb!!.child(lookforSex!!).child(userId).child("connections").child("likeme")
+                usersDb!!.child(lookForSex!!).child(userId).child("connections").child("likeme")
                     .child(
                         currentUID!!
                     ).setValue(true)
@@ -276,10 +250,11 @@ class HomeSwipeActivity : Activity() {
         currentUserConnectionsDb.addListenerForSingleValueEvent(object : ValueEventListener {
             override fun onDataChange(dataSnapshot: DataSnapshot) {
                 if (dataSnapshot.exists()) {
+
                     //prompt user that match
                     //later change to notification
                     sendNotification()
-                    usersDb!!.child(lookforSex!!).child(dataSnapshot.key!!).child("connections")
+                    usersDb!!.child(lookForSex!!).child(dataSnapshot.key!!).child("connections")
                         .child("match_result").child(
                             currentUID!!
                         ).setValue(true)
@@ -300,35 +275,11 @@ class HomeSwipeActivity : Activity() {
                     groupInfoDb.set(newGroupMap)
                     groupInfoDb.update("members", idUserList)
                     groupInfoDb.update("createTime", FieldValue.serverTimestamp())
-                    usersDb!!.child(lookforSex!!).child(dataSnapshot.key!!).child("group").child(
+                    usersDb!!.child(lookForSex!!).child(dataSnapshot.key!!).child("group").child(
                         currentUID!!
                     ).setValue(key)
                     usersDb!!.child(userSex!!).child(currentUID!!).child("group")
                         .child(dataSnapshot.key!!).setValue(key)
-
-                    // remote notification
-                    //val topic = "/topics/${currentUID}"
-
-                    /*FirebaseMessaging.getInstance().subscribeToTopic("/topics/${dataSnapshot.key}")
-                        .addOnSuccessListener {
-                            Log.d("onSubscribeToTopic", "Success")
-                        }*/
-
-                    val topic = "/topics/${dataSnapshot.key}"
-                    val notification = JSONObject()
-                    val notificationBody = JSONObject()
-
-                    try {
-                        notificationBody.put("title", "PineApple")
-                        notificationBody.put("message", "Wow! You've got a new match!")   //Enter your notification message
-                        notification.put("to", topic)
-                        notification.put("data", notificationBody)
-                        Log.e("TAG", "try")
-                    } catch (e: JSONException) {
-                        Log.e("TAG", "onCreate: " + e.message)
-                    }
-
-                    sendNotification(notification, dataSnapshot.key.toString())
                 }
             }
 
@@ -357,36 +308,6 @@ class HomeSwipeActivity : Activity() {
         }
     }
 
-    private val requestQueue: RequestQueue by lazy {
-        Volley.newRequestQueue(this.applicationContext)
-    }
-
-    private fun sendNotification(notification: JSONObject, topicName: String) {
-        Log.e("TAG", "sendNotification")
-        val jsonObjectRequest = object : JsonObjectRequest(FCM_API, notification,
-            Response.Listener<JSONObject> { response ->
-                Log.i("TAG", "onResponse: $response")
-            },
-            Response.ErrorListener {
-                Toast.makeText(this@HomeSwipeActivity, "Request error", Toast.LENGTH_LONG).show()
-                Log.i("TAG", "onErrorResponse: Didn't work")
-            }) {
-
-            override fun getHeaders(): Map<String, String> {
-                val params = HashMap<String, String>()
-                params["Authorization"] = serverKey
-                params["Content-Type"] = contentType
-                return params
-            }
-        }
-        requestQueue.add(jsonObjectRequest)
-
-       /* FirebaseMessaging.getInstance().unsubscribeFromTopic("/topics/${topicName}")
-            .addOnSuccessListener {
-                Log.d("onUnsubscribeFromTopic", "Success")
-            }*/
-    }
-
     private fun createNotificationChannel() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             val name = "Matching Channel"
@@ -401,8 +322,9 @@ class HomeSwipeActivity : Activity() {
         }
     }
 
-
-    override fun onBackPressed() {
+    private fun onReturn() {
+        startActivity(Intent(mContext, UtilityTopPicksActivity::class.java))
+        finish()
     }
 
     /**
@@ -416,14 +338,14 @@ class HomeSwipeActivity : Activity() {
             maleDb.addChildEventListener(object : ChildEventListener {
                 override fun onChildAdded(dataSnapshot: DataSnapshot, s: String?) {
                     if (dataSnapshot.key == currentUID) {
-                        userSex = "male"
                         Log.d(
                             TAG,
                             "onChildAdded: the sex is $userSex"
                         )
+                        userSex = "male"
                         //updateLocation
                         updateLocation()
-                        lookforSex = dataSnapshot.getValue(
+                        lookForSex = dataSnapshot.getValue(
                             User::class.java
                         )!!.preferSex
                         findInterest(dataSnapshot)
@@ -442,17 +364,18 @@ class HomeSwipeActivity : Activity() {
             femaleDb.addChildEventListener(object : ChildEventListener {
                 override fun onChildAdded(dataSnapshot: DataSnapshot, s: String?) {
                     if (dataSnapshot.key == currentUID) {
-                        userSex = "female"
                         Log.d(
                             TAG,
                             "onChildAdded: the sex is $userSex"
                         )
+                        userSex = "female"
                         //update location
                         updateLocation()
-                        lookforSex = dataSnapshot.getValue(
+                        lookForSex = dataSnapshot.getValue(
                             User::class.java
                         )!!.preferSex
                         findInterest(dataSnapshot)
+
                         findFilter(dataSnapshot)
 
                         potentialMatch
@@ -477,8 +400,9 @@ class HomeSwipeActivity : Activity() {
     val potentialMatch: Unit
         get() {
             val potentialMatch = FirebaseDatabase.getInstance().reference.child(
-                lookforSex!!
+                lookForSex!!
             )
+            val rankList = RankList()
             potentialMatch.addChildEventListener(object : ChildEventListener {
                 override fun onChildAdded(dataSnapshot: DataSnapshot, s: String?) {
                     if (dataSnapshot.exists() && !dataSnapshot.child("connections")
@@ -490,97 +414,9 @@ class HomeSwipeActivity : Activity() {
                         val curUser = dataSnapshot.getValue(
                             User::class.java
                         )
-                        val tempFood = curUser!!.isHobby_food
-                        val tempMusic = curUser.isHobby_music
-                        val tempArt = curUser.isHobby_art
-                        val tempMovies = curUser.isHobby_movies
-                        val showDoB = curUser.isShowDoB
-                        val showDistance = curUser.isShowDistance
-                        if (tempMusic == music || tempArt == art || tempFood == food || tempMovies == movies) {
-                            //calculate age
-                            val dob = curUser.dateOfBirth
-                            val cal = CalculateAge(dob!!)
-                            val age = cal.age
-
-                            //initialize card view
-                            //check profile image first
-                            var profileImageUrl =
-                                if (lookforSex == "female") "defaultFemale" else "defaultMale"
-                            if (dataSnapshot.child("profileImageUrl").value != null) {
-                                profileImageUrl =
-                                    dataSnapshot.child("profileImageUrl").value.toString()
-                            }
-                            val username = curUser.username
-                            val bio = curUser.description
-                            val interest = StringBuilder()
-                            if (tempMovies) {
-                                interest.append("Movies   ")
-                            }
-                            if (tempMusic) {
-                                interest.append("Music   ")
-                            }
-                            if (tempArt) {
-                                interest.append("Art   ")
-                            }
-                            if (tempFood) {
-                                interest.append("Food   ")
-                            }
-
-                            //calculate distance
-                            // gps = GPS(mContext)
-                            Log.d(
-                                TAG,
-                                "onChildAdded: the x, y of user is $latitude, $longtitude"
-                            )
-                            Log.d(
-                                TAG,
-                                "onChildAdded: the other user x y is " + curUser.latitude + ", " + curUser.longtitude
-                            )
-                            val distance =
-                                if (gps != null)
-                                    gps!!.calculateDistance(
-                                        latitude,
-                                        longtitude,
-                                        curUser.latitude,
-                                        curUser.longtitude
-                                    )
-                                else 0
-                            Log.d(
-                                TAG,
-                                "distance is " + distance
-                            )
-
-//                            if (age in minAge..maxAge && distance <= distancePreference) {
-//                                val item = Cards(
-//                                    dataSnapshot.key!!,
-//                                    username,
-//                                    dob,
-//                                    age,
-//                                    profileImageUrl,
-//                                    bio,
-//                                    interest.toString(),
-//                                    distance,
-//                                    showDoB,
-//                                    showDistance
-//                                )
-//                                rowItems!!.add(item)
-//                                arrayAdapter?.notifyDataSetChanged()
-//                            }
-                            val item = Cards(
-                                dataSnapshot.key!!,
-                                username,
-                                dob,
-                                age,
-                                profileImageUrl,
-                                bio,
-                                interest.toString(),
-                                distance,
-                                showDoB,
-                                showDistance
-                            )
-                            rowItems!!.add(item)
-                            arrayAdapter?.notifyDataSetChanged()
-                        }
+                        val rankObject = RankObject(curUser!!, 0, dataSnapshot)
+                        rankList.add(rankObject)
+                        checkKOL(rankObject, rankList)
                     }
                 }
 
@@ -591,12 +427,109 @@ class HomeSwipeActivity : Activity() {
             })
         }
 
+    private fun checkKOL(rankObject: RankObject, rankList : RankList) {
+        val user = rankObject.getUser()!!
+        val likeMeRef = FirebaseDatabase.getInstance().reference.child(user.sex!!).child(user.user_id!!)
+            .child("connections").child("likeme")
+        Log.d(TAG_RANK, "checkKOL : ${user.user_id}")
+        likeMeRef.addChildEventListener(object : ChildEventListener {
+            override fun onChildAdded(snapshot: DataSnapshot, previousChildName: String?) {
+                if (snapshot.exists()) {
+                    Log.d(TAG_RANK, "${user.user_id}: ${snapshot.key} exists.")
+                    rankObject.upLikeCount()
+                    Log.d(TAG_RANK, "-----------------------------")
+                    Log.d(TAG_RANK, "${rankObject.getUser()!!.user_id}")
+                    rankList.sort()
+                    rowItems!!.clear()
+                    for (i in rankList.list) {
+                        addToRowItems(i.getUser()!!, i.getSnapshot())
+                    }
+                    rowItems!!.reverse()
+                } else {
+                    Log.d(TAG_RANK, "${user.user_id}: ${snapshot.key} doesn't exist.")
+                }
+            }
+
+            override fun onChildChanged(snapshot: DataSnapshot, previousChildName: String?) {}
+            override fun onChildRemoved(snapshot: DataSnapshot) {}
+            override fun onChildMoved(snapshot: DataSnapshot, previousChildName: String?) {}
+            override fun onCancelled(error: DatabaseError) {
+                Log.d(TAG_RANK, "onCancelled")
+            }
+        })
+    }
+
+    private fun addToRowItems(curUser : User, dataSnapshot: DataSnapshot) {
+        val tempFood = curUser.isHobby_food
+        val tempMusic = curUser.isHobby_music
+        val tempArt = curUser.isHobby_art
+        val tempMovies = curUser.isHobby_movies
+        val showDoB = curUser.isShowDoB
+        val showDistance = curUser.isShowDistance
+        if (tempMusic == music || tempArt == art || tempFood == food || tempMovies == movies) {
+            //calculate age
+            val dob = curUser.dateOfBirth
+            val cal = CalculateAge(dob!!)
+            val age = cal.age
+
+            //initialize card view
+            //check profile image first
+            var profileImageUrl =
+                if (lookForSex == "female") "defaultFemale" else "defaultMale"
+            if (dataSnapshot.child("profileImageUrl").value != null) {
+                profileImageUrl =
+                    dataSnapshot.child("profileImageUrl").value.toString()
+            }
+            val username = curUser.username
+            val bio = curUser.description
+            val interest = StringBuilder()
+            if (tempMovies) {
+                interest.append("Movies   ")
+            }
+            if (tempMusic) {
+                interest.append("Music   ")
+            }
+            if (tempArt) {
+                interest.append("Art   ")
+            }
+            if (tempFood) {
+                interest.append("Food   ")
+            }
+
+            //calculate distance
+            // gps = GPS(mContext)
+            Log.d(TAG, "onChildAdded: the x, y of user is $latitude, $longitude")
+            Log.d(TAG, "onChildAdded: the other user x y is " + curUser.latitude + ", " + curUser.longtitude)
+            val distance =
+                if (gps != null) gps!!.calculateDistance(latitude, longitude,
+                    curUser.latitude,  curUser.longtitude) else 0
+            Log.d(TAG, "distance is $distance")
+
+            if (age in minAge..maxAge && distance <= distancePreference) {
+                val item = Cards(
+                    dataSnapshot.key!!,
+                    username,
+                    dob,
+                    age,
+                    profileImageUrl,
+                    bio,
+                    interest.toString(),
+                    distance,
+                    showDoB,
+                    showDistance
+                )
+                rowItems!!.add(item)
+                arrayAdapter?.notifyDataSetChanged()
+            }
+        }
+    }
+
     //Dislike Button = Swipe left
     private fun dislikeBtn() {
         if (rowItems!!.size != 0) {
-            val card_item = rowItems!![0]
-            val userId = card_item.userId
-            usersDb!!.child(lookforSex!!).child(userId).child("connections").child("dislikeme")
+            val cardItem = rowItems!![0]
+            val userId = cardItem.userId
+            usersDb!!.child(lookForSex!!).child(userId).child("connections").child("dislikeme")
                 .child(
                     currentUID!!
                 ).setValue(true)
@@ -605,10 +538,10 @@ class HomeSwipeActivity : Activity() {
             cardCache!!.add(0, removedCard)
             Log.d(TAG, "Added ${removedCard.name} to cache")
 
-            UtilityHistoryActivity.uploadActivity(userSex!!, thisUserId!!, "You disliked ${card_item.name}")
+            UtilityHistoryActivity.uploadActivity(userSex!!, thisUserId!!, "You disliked ${cardItem.name}")
             arrayAdapter?.notifyDataSetChanged()
             val btnClick = Intent(mContext, BtnDislikeActivity::class.java)
-            btnClick.putExtra("url", card_item.profileImageUrl)
+            btnClick.putExtra("url", cardItem.profileImageUrl)
             startActivity(btnClick)
         }
     }
@@ -616,21 +549,21 @@ class HomeSwipeActivity : Activity() {
     //Like Button = Swipe right
     private fun likeBtn() {
         if (rowItems!!.size != 0) {
-            val card_item = rowItems!![0]
-            val userId = card_item.userId
-            usersDb!!.child(lookforSex!!).child(userId).child("connections").child("likeme").child(
+            val cardItem = rowItems!![0]
+            val userId = cardItem.userId
+            usersDb!!.child(lookForSex!!).child(userId).child("connections").child("likeme").child(
                 currentUID!!
             ).setValue(true)
-            UtilityHistoryActivity.uploadActivity(userSex!!, thisUserId!!, "You liked ${card_item.name}")
+            UtilityHistoryActivity.uploadActivity(userSex!!, thisUserId!!, "You liked ${cardItem.name}")
 
             //check matches
-            isConnectionMatch(userId, card_item.name!!)
+            isConnectionMatch(userId, cardItem.name!!)
 
             rowItems!!.removeAt(0)
 
             arrayAdapter?.notifyDataSetChanged()
             val btnClick = Intent(mContext, BtnLikeActivity::class.java)
-            btnClick.putExtra("url", card_item.profileImageUrl)
+            btnClick.putExtra("url", cardItem.profileImageUrl)
             startActivity(btnClick)
         }
     }
@@ -641,7 +574,7 @@ class HomeSwipeActivity : Activity() {
             return
         }
         val card = cardCache!!.removeAt(0)
-        usersDb!!.child(lookforSex!!).child(card.userId).child("connections").child("dislikeme")
+        usersDb!!.child(lookForSex!!).child(card.userId).child("connections").child("dislikeme")
             .child(
                 currentUID!!
             ).setValue(null)
@@ -652,7 +585,7 @@ class HomeSwipeActivity : Activity() {
     private fun transferCache() {
         Log.d(TAG, "Transferring cache...")
         if (cardCache!!.size == 0) {
-            val intent = Intent(this, HomeSwipeActivity::class.java)
+            val intent = Intent(this, UtilityTopPicksKOL::class.java)
             intent.putExtra("isRewindActivity", false)
             startActivity(intent)
             finish()
@@ -680,7 +613,7 @@ class HomeSwipeActivity : Activity() {
             listShowDoB.add(card.showDoB.toString())
             listShowDistance.add(card.showDistance.toString())
         }
-        val intent = Intent(this, HomeSwipeActivity::class.java)
+        val intent = Intent(this, UtilityTopPicksKOL::class.java)
         intent.putExtra("isRewindActivity", true)
         intent.putStringArrayListExtra("listUserId", ArrayList(listUserId))
         intent.putStringArrayListExtra("listName", ArrayList(listName))
@@ -695,42 +628,6 @@ class HomeSwipeActivity : Activity() {
         startActivity(intent)
     }
 
-    private fun setupTabLayout() {
-        tabLayout = findViewById(R.id.tabLayout)
-
-        tabLayout!!.addTab(tabLayout!!.newTab().setText("Swipe"))
-        tabLayout!!.addTab(tabLayout!!.newTab().setText("Blind Date"))
-        tabLayout!!.tabGravity = TabLayout.GRAVITY_FILL
-
-        tabLayout!!.getTabAt(TAB_NUM)?.select()
-
-        tabLayout!!.addOnTabSelectedListener(object: TabLayout.OnTabSelectedListener {
-            override fun onTabSelected(tab: TabLayout.Tab?) {
-
-            }
-
-            override fun onTabUnselected(tab: TabLayout.Tab?) {}
-            override fun onTabReselected(tab: TabLayout.Tab?) {}
-        })
-    }
-
-    /**
-     * setup top tool bar
-     */
-    private fun setupTopNavigationView() {
-        Log.d(TAG, "setupTopNavigationView: setting up TopNavigationView")
-        val tvEx = findViewById<View>(R.id.topNavViewBar) as BottomNavigationView
-        TopNavigationViewHelper.setupTopNavigationView(tvEx)
-        TopNavigationViewHelper.enableNavigation(mContext, tvEx)
-        val menu = tvEx.menu
-        val menuItem = menu.getItem(ACTIVITY_NUM)
-        menuItem.isChecked = true
-    }
-
-    /**
-     * check to see if the @param 'user' is logged in
-     * @param user
-     */
     private fun checkCurrentUser(user: FirebaseUser?) {
         Log.d(TAG, "checkCurrentUser: checking if user is logged in")
         if (user == null) {
@@ -739,13 +636,10 @@ class HomeSwipeActivity : Activity() {
         }
     }
 
-    /**
-     * Setup the firebase auth object
-     */
     private fun setupFirebaseAuth() {
         Log.d(TAG, "setupFirebaseAuth: check user")
         mAuth = FirebaseAuth.getInstance()
-        mAuthListener = AuthStateListener { firebaseAuth ->
+        mAuthListener = FirebaseAuth.AuthStateListener { firebaseAuth ->
             val user = firebaseAuth.currentUser
 
             //check if the user is logged in
@@ -754,11 +648,6 @@ class HomeSwipeActivity : Activity() {
                 // user is signed in
                 Log.d(TAG, "onAuthStateChanged: signed_in:" + user.uid)
                 thisUserId = user.uid
-
-                FirebaseMessaging.getInstance().subscribeToTopic("/topics/${user.uid}")
-                    .addOnSuccessListener {
-                        Log.d("onSubscribeToTopic", "Success")
-                    }
             } else {
                 //user is signed out
                 Log.d(TAG, "onAuthStateChanged: signed_out")
@@ -781,8 +670,7 @@ class HomeSwipeActivity : Activity() {
     }
 
     companion object {
-        private const val TAG = "HomeSwipeActivity"
-        private const val TAB_NUM = 0
-        private const val ACTIVITY_NUM = 0
+        private const val TAG = "UtilityTopPicksKOL"
+        private const val TAG_RANK = "RankList"
     }
 }

@@ -15,6 +15,14 @@
       },
       "oauth_client": [
         {
+          "client_id": "47321728033-d4equ7sqsb0ne0basf4gjr4ev4k8tp23.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.zellycookies.pineapple",
+            "certificate_hash": "7f38aa68ed614fafc650a4808b43a796a5327743"
+          }
+        },
+        {
           "client_id": "47321728033-0peejdn6qhknti0eof4kmu7vivrjmsg9.apps.googleusercontent.com",
           "client_type": 3
         }

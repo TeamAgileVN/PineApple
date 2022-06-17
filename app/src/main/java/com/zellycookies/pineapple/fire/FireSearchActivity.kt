@@ -99,9 +99,18 @@ class FireSearchActivity : AppCompatActivity() {
 
     private fun searchText() {
         val text = search!!.text.toString().lowercase(Locale.getDefault())
-        if (text.isNotEmpty()) {
+        Log.d(TAG, text)
+        if (text.isNotEmpty() && text != "") {
             if (likeList.size != 0) {
                 likeList.clear()
+                for (groupObject in copyList) {
+                    if (groupObject.userMatch.username!!.lowercase(Locale.getDefault())
+                            .contains(text)
+                    ) {
+                        likeList.add(groupObject)
+                    }
+                }
+            } else {
                 for (groupObject in copyList) {
                     if (groupObject.userMatch.username!!.lowercase(Locale.getDefault())
                             .contains(text)
@@ -112,7 +121,6 @@ class FireSearchActivity : AppCompatActivity() {
             }
         } else {
             likeList.clear()
-            likeList.addAll(copyList)
         }
         mAdapter?.notifyDataSetChanged()
     }
@@ -199,7 +207,7 @@ class FireSearchActivity : AppCompatActivity() {
                 if (dataSnapshot.exists() && dataSnapshot.key != userId) {
                     val curUser = dataSnapshot.getValue(User::class.java)
                     val groupObject = GroupObject(curUser!!)
-                    likeList.add(groupObject)
+                    //likeList.add(groupObject)
                     copyList.add(groupObject)
                     mAdapter?.notifyDataSetChanged()
                     Log.d(TAG, "onDataChange: List's size is " + likeList.size)

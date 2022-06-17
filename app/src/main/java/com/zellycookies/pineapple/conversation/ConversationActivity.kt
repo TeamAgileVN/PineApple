@@ -164,6 +164,7 @@ class ConversationActivity : AppCompatActivity() {
             firebaseRef.child(userId!!).setValue(null)
             webView?.visibility = View.GONE
             messageLayout?.visibility = View.VISIBLE
+            callControlLayout?.visibility = View.GONE
         }
 
 

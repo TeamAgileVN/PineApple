@@ -27,14 +27,14 @@
         android:id="@+id/map_Fragment"
         android:name="com.google.android.gms.maps.SupportMapFragment"
         android:layout_width="match_parent"
-        android:layout_height="613dp"
+        android:layout_height="572dp"
         app:layout_constraintBottom_toTopOf="@+id/layout_bottomnav"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintHorizontal_bias="0.5"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent"
+        android:layout_marginBottom="16dp"
         tools:context="com.hussein.pockemonandroid.MapsActivity"
-        tools:ignore="MissingConstraints" />
+        />
 
     <LinearLayout
         android:id="@+id/layout_bottomnav"
